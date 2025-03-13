@@ -11,6 +11,9 @@ from lib.utils.learning import *
 from lib.utils.utils_data import flip_data
 from lib.data.dataset_wild import WildDetDataset
 from lib.utils.vismo import render_and_save
+from multiprocessing import freeze_support
+import multiprocessing as mp
+mp.set_start_method('spawn', force=True)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -35,16 +38,24 @@ if torch.cuda.is_available():
 
 print('Loading checkpoint', opts.evaluate)
 checkpoint = torch.load(opts.evaluate, map_location=lambda storage, loc: storage)
-model_backbone.load_state_dict(checkpoint['model_pos'], strict=True)
+
+# Remove 'module.' prefix if it exists
+from collections import OrderedDict
+new_state_dict = OrderedDict()
+for k, v in checkpoint['model_pos'].items():
+    name = k.replace('module.', '')  # remove 'module.' prefix
+    new_state_dict[name] = v
+
+model_backbone.load_state_dict(new_state_dict, strict=True)
 model_pos = model_backbone
 model_pos.eval()
 testloader_params = {
           'batch_size': 1,
           'shuffle': False,
-          'num_workers': 8,
+          'num_workers': 0,
           'pin_memory': True,
-          'prefetch_factor': 4,
-          'persistent_workers': True,
+        #   'prefetch_factor': 4,
+        #   'persistent_workers': True,
           'drop_last': False
 }
 
@@ -61,6 +72,9 @@ else:
     wild_dataset = WildDetDataset(opts.json_path, clip_len=opts.clip_len, scale_range=[1,1], focus=opts.focus)
 
 test_loader = DataLoader(wild_dataset, **testloader_params)
+
+if name ==  "__main__":
+    freeze_support()
 
 results_all = []
 with torch.no_grad():
@@ -95,3 +109,4 @@ if opts.pixel:
     results_all = results_all * (min(vid_size) / 2.0)
     results_all[:,:,:2] = results_all[:,:,:2] + np.array(vid_size) / 2.0
 np.save('%s/X3D.npy' % (opts.out_path), results_all)
+
