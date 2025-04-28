@@ -1,4 +1,4 @@
-# Cycling Biomechanics Analysis Tool
+# MotionBERT Implementation and Analysis
 
 This repository contains tools for analyzing cycling biomechanics from video data using 3D pose estimation and motion analysis techniques.
 
