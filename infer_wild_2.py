@@ -77,133 +77,6 @@ def temporal_smoothing(poses, window_size=15, polyorder=3):
     return smoothed_poses
 
 
-def calculate_joint_angles(poses, parent_indices):
-    """
-    Calculate joint angles for the given poses
-
-    Args:
-        poses: numpy array of shape (T, J, 3) where T is time, J is joints, 3 is XYZ
-        parent_indices: list defining the parent joint for each joint to form limbs
-
-    Returns:
-        joint_angles: angles between adjacent limbs in degrees (T, J-1)
-    """
-    n_frames, n_joints, _ = poses.shape
-    joint_angles = np.zeros((n_frames, n_joints-1))
-
-    # For each frame
-    for f in range(n_frames):
-        angle_idx = 0
-        # For each joint (except root)
-        for j in range(1, n_joints):
-            # Skip if parent is -1 (no parent)
-            if parent_indices[j] == -1:
-                continue
-
-            # Get the parent of the current joint
-            parent = parent_indices[j]
-
-            # Get the parent of the parent (grandparent)
-            grandparent = parent_indices[parent]
-
-            # Skip if grandparent is -1 (no grandparent)
-            if grandparent == -1:
-                continue
-
-            # Calculate vectors
-            v1 = poses[f, parent] - poses[f, grandparent]
-            v2 = poses[f, j] - poses[f, parent]
-
-            # Normalize the vectors
-            v1_norm = np.linalg.norm(v1)
-            v2_norm = np.linalg.norm(v2)
-
-            # Avoid division by zero
-            if v1_norm < 1e-6 or v2_norm < 1e-6:
-                angle = 0
-            else:
-                v1 = v1 / v1_norm
-                v2 = v2 / v2_norm
-
-                # Calculate the dot product
-                dot_product = np.clip(np.dot(v1, v2), -1.0, 1.0)
-
-                # Calculate the angle in degrees
-                angle = np.degrees(np.arccos(dot_product))
-
-            joint_angles[f, angle_idx] = angle
-            angle_idx += 1
-
-    return joint_angles
-
-
-def calculate_angular_velocity(joint_angles, fps):
-    """
-    Calculate angular velocity from joint angles
-
-    Args:
-        joint_angles: numpy array of shape (T, J) where T is time, J is joints
-        fps: frames per second of the video
-
-    Returns:
-        angular_velocity: angular velocity in degrees per second (T-1, J)
-    """
-    # Calculate time step
-    dt = 1.0 / fps
-
-    # Calculate the difference in angles between consecutive frames
-    angle_diff = np.diff(joint_angles, axis=0)
-
-    # Calculate angular velocity in degrees per second
-    angular_velocity = angle_diff / dt
-
-    return angular_velocity
-
-
-def plot_kinematic_features(joint_angles, angular_velocity, out_path, joint_names=None):
-    """
-    Plot kinematic features and save to files
-
-    Args:
-        joint_angles: numpy array of shape (T, J)
-        angular_velocity: numpy array of shape (T-1, J)
-        out_path: path to save the plots
-        joint_names: list of joint names (optional)
-    """
-    n_joints = joint_angles.shape[1]
-
-    if joint_names is None:
-        joint_names = [f"Joint {i+1}" for i in range(n_joints)]
-
-    # Plot joint angles
-    plt.figure(figsize=(12, 6))
-    for j in range(n_joints):
-        plt.plot(joint_angles[:, j], label=joint_names[j])
-
-    plt.xlabel('Frame')
-    plt.ylabel('Angle (degrees)')
-    plt.title('Joint Angles Over Time')
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(os.path.join(out_path, 'joint_angles.png'))
-    plt.close()
-
-    # Plot angular velocity
-    plt.figure(figsize=(12, 6))
-    for j in range(n_joints):
-        plt.plot(angular_velocity[:, j], label=joint_names[j])
-
-    plt.xlabel('Frame')
-    plt.ylabel('Angular Velocity (degrees/s)')
-    plt.title('Joint Angular Velocity Over Time')
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(os.path.join(out_path, 'angular_velocity.png'))
-    plt.close()
-
-
 opts = parse_args()
 args = get_config(opts.config)
 
@@ -320,10 +193,6 @@ if __name__ == "__main__":
     np.save(f'{opts.out_path}/X3D_US_{video_basename}.npy', unsmoothed_results)
     np.save(f'{opts.out_path}/X3D_S_{video_basename}.npy', smoothed_results)
 
-    # Define parent indices for H36M skeleton (adjust as needed for your skeleton)
-    # The array specifies the parent joint index for each joint
-    # Example: [-1, 0, 1, 2, 0, 4, 5, 0, 7, 8, 9, 8, 11, 12, 8, 14, 15]
-    # -1 means no parent (root joint)
     parent_indices = [-1, 0, 1, 2, 0, 4, 5, 0, 7, 8, 9, 8, 11, 12, 8, 14, 15]
 
     # Joint names for better visualization (adjust as needed)
@@ -332,22 +201,6 @@ if __name__ == "__main__":
         "Spine", "Thorax", "Neck", "Head", "LShoulder", "LElbow",
         "LWrist", "RShoulder", "RElbow", "RWrist"
     ]
-
-    # Calculate kinematic features from smoothed poses
-    print("Calculating kinematic features...")
-    joint_angles = calculate_joint_angles(smoothed_results, parent_indices)
-    angular_velocity = calculate_angular_velocity(joint_angles, fps_in)
-
-    # Plot and save kinematic features
-    plot_kinematic_features(joint_angles, angular_velocity, opts.out_path,
-                            joint_names=[f"{a}-{b}" for a, b in zip(joint_names[1:], joint_names)])
-
-    # Save kinematic features as .npy files
-    np.save(f'{opts.out_path}/joint_angles_{video_basename}.npy', joint_angles)
-    np.save(f'{opts.out_path}/angular_velocity_{video_basename}.npy',
-            angular_velocity)
-
     print(f"Processing complete. Results saved to {opts.out_path}")
     print(f"- Unsmoothed video: X3D_US_{video_basename}.mp4")
     print(f"- Smoothed video: X3D_S_{video_basename}.mp4")
-    print(f"- Kinematic features: joint_angles.png, angular_velocity.png")

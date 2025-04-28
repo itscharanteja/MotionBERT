@@ -1,0 +1,72 @@
+{
+    "summary": {
+        "duration_seconds": 8.8,
+        "cadence_rpm": 73.17073170731707,
+        "cycle_consistency": 0.3847654408135487,
+        "range_of_motion": {
+            "hip_right": {
+                "min": 32.95146457520964,
+                "max": 160.18942223395504,
+                "range": 127.2379576587454
+            },
+            "knee_right": {
+                "min": 95.09251261535532,
+                "max": 163.24092009573317,
+                "range": 68.14840748037786
+            },
+            "ankle_right": {
+                "min": 13.119434310006133,
+                "max": 47.84919250594999,
+                "range": 34.72975819594386
+            },
+            "hip_left": {
+                "min": 2.67040607979245,
+                "max": 29.366574885406223,
+                "range": 26.696168805613773
+            },
+            "knee_left": {
+                "min": 89.19536361160839,
+                "max": 163.68753222485518,
+                "range": 74.49216861324679
+            },
+            "ankle_left": {
+                "min": 85.70845993860085,
+                "max": 164.16242134432133,
+                "range": 78.45396140572048
+            }
+        },
+        "peak_angular_velocity": {
+            "hip_right": 390.2200924369092,
+            "knee_right": 195.62159383792786,
+            "ankle_right": 89.09287633384012,
+            "hip_left": 103.56100855595379,
+            "knee_left": 237.8958129211215,
+            "ankle_left": 146.89015093014163
+        },
+        "trajectory_smoothness": {
+            "pelvis": 0.003324394579976797,
+            "hip_r": 0.0030517722479999065,
+            "knee_r": 0.003452460514381528,
+            "ankle_r": 0.0034351807553321123,
+            "foot_r": 0.0031364234164357185,
+            "hip_l": 0.003209766699001193,
+            "knee_l": 0.0034971795976161957,
+            "ankle_l": 0.004485048353672028,
+            "foot_l": 0.004817824345082045,
+            "spine": 0.0052566928789019585
+        }
+    },
+    "file_paths": {
+        "joint_angles": "biomech_outputs_S_fast_start/joint_angles.csv",
+        "range_of_motion": "biomech_outputs_S_fast_start/range_of_motion.csv",
+        "angular_velocities": "biomech_outputs_S_fast_start/angular_velocities.csv",
+        "trajectory_smoothness": "biomech_outputs_S_fast_start/trajectory_smoothness.csv",
+        "pedaling_cycle": "biomech_outputs_S_fast_start/pedaling_cycle_data.json",
+        "summary": "biomech_outputs_S_fast_start/summary_biomechanics.csv",
+        "plots": {
+            "joint_angles": "biomech_outputs_S_fast_start/joint_angles_plot.png",
+            "angular_velocities": "biomech_outputs_S_fast_start/angular_velocities_plot.png",
+            "pedaling_cycles": "biomech_outputs_S_fast_start/pedaling_cycles.png"
+        }
+    }
+}
